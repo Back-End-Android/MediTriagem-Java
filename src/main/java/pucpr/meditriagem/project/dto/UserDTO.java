@@ -19,5 +19,6 @@ public class UserDTO {
     @Email(message = "{error.email.invalid}")
     @NotBlank(message = "{error.email.notblank}")
     private String email;
-
+    private String senha;
+    private String cargo;
 }

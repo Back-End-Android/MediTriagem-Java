@@ -1,17 +1,14 @@
 package pucpr.meditriagem.project.controller;
 
-import pucpr.meditriagem.project.dto.UserDTO;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.websocket.server.PathParam;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.ArrayList;
+import pucpr.meditriagem.project.dto.UserDTO;
+import pucpr.meditriagem.project.usuario.UsuarioService;
+import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
 
 @RestController
@@ -19,38 +16,31 @@ import java.util.List;
 @Tag(name = "Usuário", description = "APIs de gerenciamento de usuários")
 public class UserController {
 
-    private List<UserDTO> usuarios = new ArrayList<>();
+    @Autowired
+    private UsuarioService service;
 
     @PostMapping
-    @Operation(summary = "Salva um usuário", description = "Salva um usuário")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Usuário Salvo com sucesso!"),
-            @ApiResponse(responseCode = "400", description = "Os dados do usuário estão incorretos."),
-    })
     public ResponseEntity<UserDTO> save(@Valid @RequestBody UserDTO userDTO) {
-        userDTO.setId(1);
-        usuarios.add(userDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(userDTO);
+        UserDTO usuarioSalvo = service.save(userDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(usuarioSalvo);
     }
 
     @GetMapping
-    @Operation(summary = "Obter a lista de usuários", description = "Retorna a lista de usuários")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Recuperado com sucesso"),
-    })
     public List<UserDTO> findAll() {
-        return usuarios;
+        return service.findAll();
     }
 
     @PutMapping("/{id}")
-    public UserDTO update(@PathVariable("id") Integer id, @RequestBody UserDTO userDTO) {
-        userDTO.setId(id);
-        return userDTO;
+    @Operation(summary = "Atualiza um usuário pelo ID")
+    public ResponseEntity<UserDTO> update(@PathVariable Integer id, @RequestBody @Valid UserDTO userDTO) {
+        UserDTO usuarioAtualizado = service.update(id, userDTO);
+        return ResponseEntity.ok(usuarioAtualizado);
     }
 
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable("id") Integer id) {
+    @Operation(summary = "Deleta um usuário pelo ID")
+    public ResponseEntity<Void> delete(@PathVariable Integer id) {
+        service.delete(id);
+        return ResponseEntity.noContent().build();
     }
-
-
 }
