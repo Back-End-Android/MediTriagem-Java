@@ -27,7 +27,7 @@ public class SecurityConfigurations {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/api/triagem").permitAll() // Permitir que novos usuários se cadastrem
+                        .requestMatchers("/**").permitAll() // Permitir que novos usuários se cadastrem
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/usuario").permitAll() // Permitir que novos usuários se cadastrem
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
