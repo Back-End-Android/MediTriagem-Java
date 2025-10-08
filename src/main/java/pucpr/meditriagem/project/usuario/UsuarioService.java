@@ -44,13 +44,13 @@ public class UsuarioService {
                 .collect(Collectors.toList());
     }
 
-    public UserDTO findById(Integer id) {
+    public UserDTO findById(Long id) {
         return repository.findById(id)
                 .map(this::toDTO)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado!"));
     }
 
-    public UserDTO update(Integer id, UserDTO userDTO) {
+    public UserDTO update(Long id, UserDTO userDTO) {
         Usuario usuario = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado!"));
 
@@ -68,7 +68,7 @@ public class UsuarioService {
         return toDTO(usuarioAtualizado);
     }
 
-    public void delete(Integer id) {
+    public void delete(Long id) {
         if (!repository.existsById(id)) {
             throw new RuntimeException("Usuário não encontrado para exclusão!");
         }

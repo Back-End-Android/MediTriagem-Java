@@ -16,13 +16,13 @@ public class TriagemController {
     @Autowired
     private TriagemService triagemService;
 
-    @PostMapping
-    public ResponseEntity<Triagem> criarTriagem(@RequestBody Triagem triagem) {
-        Triagem novaTriagem = triagemService.save(triagem);
+    @PostMapping("/criar")
+    public ResponseEntity<Triagem> criarTriagem(@RequestBody TriagemDTO triagemDTO) {
+        Triagem novaTriagem = triagemService.criarTriagem(triagemDTO.getUsuario().getId(), triagemDTO.getQuestionario());
         return ResponseEntity.ok(novaTriagem);
     }
 
-    @GetMapping("/getAll")
+    @GetMapping("/get_all")
     public List<Triagem> listarTriagens(){
         return triagemService.findAll();
     }
@@ -33,7 +33,9 @@ public class TriagemController {
         return ResponseEntity.ok(triagem);
     }
 
+
 //    @PutMapping("/update/{id}")
+    //@Operation(summary = "Atualiza a triagem pelo ID")
 //    public Boolean atualizar(){
 //        return triagemService.update();
 //    }

@@ -32,14 +32,14 @@ public class UserController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Atualiza um usuário pelo ID")
-    public ResponseEntity<UserDTO> update(@PathVariable Integer id, @RequestBody @Valid UserDTO userDTO) {
+    public ResponseEntity<UserDTO> update(@PathVariable Long id, @RequestBody @Valid UserDTO userDTO) {
         UserDTO usuarioAtualizado = service.update(id, userDTO);
         return ResponseEntity.ok(usuarioAtualizado);
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Deleta um usuário pelo ID")
-    public ResponseEntity<Void> delete(@PathVariable Integer id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
     }

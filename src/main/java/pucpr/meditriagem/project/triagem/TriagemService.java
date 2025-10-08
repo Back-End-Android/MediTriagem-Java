@@ -1,7 +1,7 @@
 package pucpr.meditriagem.project.triagem;
 
 import org.springframework.stereotype.Service;
-import pucpr.meditriagem.project.dto.TriagemDTO;
+import pucpr.meditriagem.project.dto.QuestionarioDTO;
 import pucpr.meditriagem.project.usuario.Usuario;
 import pucpr.meditriagem.project.usuario.UsuarioRepository;
 
@@ -20,14 +20,11 @@ public class TriagemService {
     }
 
     // Cria uma nova triagem para um paciente
-    public Triagem criarTriagem(int pacienteId, QuestionarioSintomas questionario) {
+    public Triagem criarTriagem(Long pacienteId, QuestionarioDTO questionario) {
         Usuario paciente = usuarioRepository.findById(pacienteId)
                 .orElseThrow(() -> new RuntimeException("Paciente não encontrado"));
 
         Triagem triagem = new Triagem();
-        triagem.setUsuario(paciente);
-        triagem.setQuestionario(questionario);
-
         return triagemRepository.save(triagem);
     }
 

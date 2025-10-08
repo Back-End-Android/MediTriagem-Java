@@ -27,15 +27,10 @@ public class Triagem {
     @JoinColumn(name = "paciente_id")
     private Usuario paciente;
 
-    // Relacionamento com a classe questionário;
+    // Relacionamento com a classe questionário
     @OneToOne(cascade = CascadeType.ALL)
     private QuestionarioSintomas questionario;
 
-    // Implementar melhor no futuro...
-    public void setQuestionario(QuestionarioSintomas questionario) {
-    }
-    public void setUsuario(Usuario paciente) {
-    }
 
     // Desativa a triagem
     public Boolean setIsActivated(){

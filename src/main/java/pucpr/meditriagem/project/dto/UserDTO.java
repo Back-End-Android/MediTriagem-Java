@@ -10,7 +10,7 @@ import lombok.Data;
 @AllArgsConstructor
 public class UserDTO {
 
-    private Integer id;
+    private Long id;
 
     @NotNull(message = "{error.nome.notnull}")
     @NotBlank(message = "{error.nome.notblank}")
