@@ -3,7 +3,9 @@ package pucpr.meditriagem.project.usuario;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import pucpr.meditriagem.project.dto.UserDTO;
+import pucpr.meditriagem.project.usuario.dto.UserRequestDTO;
+import pucpr.meditriagem.project.usuario.dto.UserResponseDTO;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -11,77 +13,74 @@ import java.util.stream.Collectors;
 public class UsuarioService {
 
     @Autowired
-    private UsuarioRepository repository;
+    private UsuarioRepository usuarioRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public UserDTO save(UserDTO userDTO) {
-        if (repository.findByEmail(userDTO.getEmail()).isPresent()) {
-            throw new IllegalStateException("E-mail já cadastrado!");
+    // Método para o Admin criar um novo usuário (ex: outro Admin)
+    public UserResponseDTO salvar(UserRequestDTO dados) {
+        if (usuarioRepository.findByEmail(dados.getEmail()).isPresent()) {
+            throw new RuntimeException("Email já cadastrado");
         }
 
-        Usuario usuario = new Usuario();
-        usuario.setNome(userDTO.getNome());
-        usuario.setEmail(userDTO.getEmail());
-        usuario.setSenha(passwordEncoder.encode(userDTO.getSenha()));
+        var senhaCriptografada = passwordEncoder.encode(dados.getSenha());
 
+        var usuario = new Usuario(
+                null,
+                dados.getEmail(),
+                senhaCriptografada,
+                dados.getCargo() // <-- MUDANÇA (Linha 33) - Era getRole()
+        );
 
-        if (userDTO.getCargo() == null || userDTO.getCargo().isBlank()) {
-            usuario.setCargo("USER");
-        } else {
-            usuario.setCargo(userDTO.getCargo().toUpperCase());
-        }
-
-        Usuario usuarioSalvo = repository.save(usuario);
-        return toDTO(usuarioSalvo);
+        usuarioRepository.save(usuario);
+        return new UserResponseDTO(usuario);
     }
 
-    public List<UserDTO> findAll() {
-        return repository.findAll()
+    // Método para o Admin atualizar um usuário
+    public UserResponseDTO atualizar(Long id, UserRequestDTO dados) {
+        var usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+
+        if (dados.getEmail() != null) {
+            usuario.setEmail(dados.getEmail());
+        }
+        if (dados.getCargo() != null) { // <-- MUDANÇA - Era getRole()
+            usuario.setCargo(dados.getCargo()); // <-- MUDANÇA - Era setRole(dados.getRole())
+        }
+        // Se a senha foi enviada, atualiza
+        if (dados.getSenha() != null && !dados.getSenha().isEmpty()) {
+            usuario.setSenha(passwordEncoder.encode(dados.getSenha()));
+        }
+
+        usuarioRepository.save(usuario);
+        return new UserResponseDTO(usuario);
+    }
+
+    // Método para o Admin listar todos os usuários
+    public List<UserResponseDTO> listarTodos() {
+        return usuarioRepository.findAll()
                 .stream()
-                .map(this::toDTO)
+                .map(UserResponseDTO::new)
                 .collect(Collectors.toList());
     }
 
-    public UserDTO findById(Long id) {
-        return repository.findById(id)
-                .map(this::toDTO)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado!"));
+    // Método para o Admin buscar um usuário
+    public UserResponseDTO buscarPorId(Long id) {
+        var usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        return new UserResponseDTO(usuario);
     }
 
-    public UserDTO update(Long id, UserDTO userDTO) {
-        Usuario usuario = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado!"));
-
-        if (userDTO.getNome() != null) {
-            usuario.setNome(userDTO.getNome());
+    // Método para o Admin deletar um usuário
+    public void excluir(Long id) {
+        if (!usuarioRepository.existsById(id)) {
+            throw new RuntimeException("Usuário não encontrado");
         }
-        if (userDTO.getEmail() != null) {
-            usuario.setEmail(userDTO.getEmail());
-        }
-        if (userDTO.getCargo() != null) {
-            usuario.setCargo(userDTO.getCargo().toUpperCase());
-        }
-
-        Usuario usuarioAtualizado = repository.save(usuario);
-        return toDTO(usuarioAtualizado);
-    }
-
-    public void delete(Long id) {
-        if (!repository.existsById(id)) {
-            throw new RuntimeException("Usuário não encontrado para exclusão!");
-        }
-        repository.deleteById(id);
-    }
-
-    private UserDTO toDTO(Usuario usuario) {
-        return new UserDTO(
-                usuario.getId(),
-                usuario.getNome(),
-                usuario.getEmail(),
-                null,
-                usuario.getCargo()
-        );
+        // CUIDADO: Deletar um usuário aqui pode quebrar o Paciente/Medico
+        // que está ligado a ele. Precisamos de uma lógica mais complexa aqui,
+        // mas para o CRUD funcionar, isso é o básico.
+        usuarioRepository.deleteById(id);
     }
 }
