@@ -1,10 +1,10 @@
-package pucpr.meditriagem.project.controller;
+package pucpr.meditriagem.project.agendamento;
 
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import pucpr.meditriagem.project.agendamento.AgendamentoService;
-import pucpr.meditriagem.project.dto.AgendamentoDTO;
+import pucpr.meditriagem.project.agendamento.dto.AgendamentoDTO;
 
 import java.util.List;
 

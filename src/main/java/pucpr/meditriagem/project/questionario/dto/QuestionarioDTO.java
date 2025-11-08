@@ -1,5 +1,5 @@
 package pucpr.meditriagem.project.dto;
-import pucpr.meditriagem.project.triagem.LocalCorpo;
+import pucpr.meditriagem.project.questionario.LocalCorpo;
 
 
 public record QuestionarioDTO(

@@ -1,7 +1,7 @@
 package pucpr.meditriagem.project.triagem;
 
 import org.springframework.stereotype.Service;
-import pucpr.meditriagem.project.dto.QuestionarioDTO;
+import pucpr.meditriagem.project.questionario.dto.QuestionarioDTO;
 import pucpr.meditriagem.project.usuario.Usuario;
 import pucpr.meditriagem.project.usuario.UsuarioRepository;
 

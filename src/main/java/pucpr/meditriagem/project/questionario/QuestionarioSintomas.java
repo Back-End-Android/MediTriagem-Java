@@ -1,4 +1,4 @@
-package pucpr.meditriagem.project.triagem;
+package pucpr.meditriagem.project.questionario;
 
 import jakarta.persistence.*;
 import lombok.Getter;

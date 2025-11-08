@@ -1,4 +1,4 @@
-package pucpr.meditriagem.project.dto;
+package pucpr.meditriagem.project.usuario.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

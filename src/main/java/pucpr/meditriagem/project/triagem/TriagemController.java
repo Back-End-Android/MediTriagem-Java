@@ -1,9 +1,10 @@
-package pucpr.meditriagem.project.controller;
+package pucpr.meditriagem.project.triagem;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import pucpr.meditriagem.project.dto.TriagemDTO;
+import pucpr.meditriagem.project.triagem.dto.TriagemDTO;
+
 import pucpr.meditriagem.project.triagem.Triagem;
 import pucpr.meditriagem.project.triagem.TriagemService;
 

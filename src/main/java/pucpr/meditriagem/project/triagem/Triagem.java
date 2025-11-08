@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import pucpr.meditriagem.project.questionario.QuestionarioSintomas;
 import pucpr.meditriagem.project.usuario.Usuario;
 
 @Entity

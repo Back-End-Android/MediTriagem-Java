@@ -30,7 +30,7 @@ public class UsuarioService {
                 null,
                 dados.getEmail(),
                 senhaCriptografada,
-                dados.getCargo() // <-- MUDANÇA (Linha 33) - Era getRole()
+                dados.getCargo()
         );
 
         usuarioRepository.save(usuario);
@@ -46,8 +46,8 @@ public class UsuarioService {
         if (dados.getEmail() != null) {
             usuario.setEmail(dados.getEmail());
         }
-        if (dados.getCargo() != null) { // <-- MUDANÇA - Era getRole()
-            usuario.setCargo(dados.getCargo()); // <-- MUDANÇA - Era setRole(dados.getRole())
+        if (dados.getCargo() != null) {
+            usuario.setCargo(dados.getCargo());
         }
         // Se a senha foi enviada, atualiza
         if (dados.getSenha() != null && !dados.getSenha().isEmpty()) {
@@ -78,9 +78,6 @@ public class UsuarioService {
         if (!usuarioRepository.existsById(id)) {
             throw new RuntimeException("Usuário não encontrado");
         }
-        // CUIDADO: Deletar um usuário aqui pode quebrar o Paciente/Medico
-        // que está ligado a ele. Precisamos de uma lógica mais complexa aqui,
-        // mas para o CRUD funcionar, isso é o básico.
         usuarioRepository.deleteById(id);
     }
 }

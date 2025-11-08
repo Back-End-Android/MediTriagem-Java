@@ -1,4 +1,4 @@
-package pucpr.meditriagem.project.dto;
+package pucpr.meditriagem.project.agendamento.dto;
 
 import jakarta.validation.constraints.*;
 import java.time.LocalDateTime;

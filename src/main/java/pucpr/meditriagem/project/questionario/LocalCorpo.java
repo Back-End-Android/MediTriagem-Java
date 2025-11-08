@@ -1,4 +1,4 @@
-package pucpr.meditriagem.project.triagem;
+package pucpr.meditriagem.project.questionario;
 
 public enum LocalCorpo {
     CABEÇA,
