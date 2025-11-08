@@ -1,4 +1,4 @@
-package pucpr.meditriagem.project.dto;
+package pucpr.meditriagem.project.questionario.dto;
 import pucpr.meditriagem.project.questionario.LocalCorpo;
 
 

@@ -1,8 +1,5 @@
 package pucpr.meditriagem.project.triagem.dto;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import pucpr.meditriagem.project.questionario.*;
-import pucpr.meditriagem.project.paciente.Paciente;
+import pucpr.meditriagem.project.questionario.dto.QuestionarioDTO;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -13,13 +10,13 @@ public class TriagemDTO {
 
     private Long id_triagem;
 
-    // Dados do paciente (que vêm da classe Usuario - Paciente)
-    Long id;
-    String nome_completo;
-    String genero;
-    String dataNascimento;
+    // Dados específicos do paciente (não o objeto completo)
+    private Long pacienteId;
+    private String nomeCompleto;
+    private String genero;
+    private Integer idade;
 
-    // Questionário
-    private pucpr.meditriagem.project.dto.QuestionarioDTO questionario;
+    // Questionário completo
+    private QuestionarioDTO questionario;
 }
 

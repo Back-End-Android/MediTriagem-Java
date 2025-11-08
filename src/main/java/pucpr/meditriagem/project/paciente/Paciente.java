@@ -1,11 +1,15 @@
 package pucpr.meditriagem.project.paciente;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 import pucpr.meditriagem.project.usuario.Usuario;
 
 import java.time.LocalDate;
 import java.util.Objects;
 
+@Getter
+@Setter
 @Entity(name = "Paciente")
 @Table(name = "pacientes")
 public class Paciente {
@@ -23,6 +27,10 @@ public class Paciente {
 
     private LocalDate dtNascimento;
 
+    private String email;
+
+    private String senha;
+
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "usuario_id", referencedColumnName = "id")
     private Usuario usuario;
@@ -31,39 +39,23 @@ public class Paciente {
     public Paciente() {
     }
 
-    public Paciente(String nomeCompleto, String cpf, String genero, LocalDate dtNascimento, Usuario usuario) {
+    public Paciente(String nomeCompleto, String cpf, String genero, LocalDate dtNascimento, Usuario usuario, String email, String senha) {
         this.nomeCompleto = nomeCompleto;
         this.cpf = cpf;
         this.genero = genero;
         this.dtNascimento = dtNascimento;
         this.usuario = usuario;
+        this.email = email;
+        this.senha = senha;
     }
 
-    public void atualizarDados(String nome, String genero, LocalDate dtNascimento) {
+    public void atualizarDados(String nome, String genero, LocalDate dtNascimento, String email, String senha) {
         if (nome != null) this.nomeCompleto = nome;
         if (genero != null) this.genero = genero;
         if (dtNascimento != null) this.dtNascimento = dtNascimento;
+        if (email != null) this.email = email;
+        if (senha != null) this.senha = senha;
     }
-
-    //  GETTERS E SETTERS
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public String getNomeCompleto() { return nomeCompleto; }
-    public void setNomeCompleto(String nomeCompleto) { this.nomeCompleto = nomeCompleto; }
-
-    public String getCpf() { return cpf; }
-    public void setCpf(String cpf) { this.cpf = cpf; }
-
-    public String getGenero() { return genero; }
-    public void setGenero(String genero) { this.genero = genero; }
-
-    public LocalDate getDtNascimento() { return dtNascimento; }
-    public void setDtNascimento(LocalDate dtNascimento) { this.dtNascimento = dtNascimento; }
-
-    public Usuario getUsuario() { return usuario; }
-    public void setUsuario(Usuario usuario) { this.usuario = usuario; }
 
     // --- Equals e HashCode ---
     @Override

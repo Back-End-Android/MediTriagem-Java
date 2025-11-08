@@ -19,7 +19,7 @@ public class TriagemController {
 
     @PostMapping("/criar")
     public ResponseEntity<Triagem> criarTriagem(@RequestBody TriagemDTO triagemDTO) {
-        Triagem novaTriagem = triagemService.criarTriagem(triagemDTO.getUsuario().getId(), triagemDTO.getQuestionario());
+        Triagem novaTriagem = triagemService.criarTriagem(triagemDTO.getPacienteId(), triagemDTO.getQuestionario());
         return ResponseEntity.ok(novaTriagem);
     }
 

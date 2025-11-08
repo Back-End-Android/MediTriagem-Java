@@ -7,7 +7,6 @@ import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import pucpr.meditriagem.project.questionario.QuestionarioSintomas;
-import pucpr.meditriagem.project.usuario.Usuario;
 
 @Entity
 @Getter
@@ -23,12 +22,16 @@ public class Triagem {
 
     private Boolean isActivated = Boolean.TRUE;
 
-    // Relacionamento com a classe paciente, trazendo: nome, idade, gênero e pré-disposição a doenças;
-    @ManyToOne
-    @JoinColumn(name = "paciente_id")
-    private Usuario paciente;
+    // ID do paciente para controle (referência ao Paciente)
+    @Column(name = "paciente_id")
+    private Long pacienteId;
 
-    // Relacionamento com a classe questionário
+    // Dados específicos do paciente armazenados na triagem
+    private String nomeCompleto;
+    private String genero;
+    private Integer idade;
+
+    // Relacionamento com a classe questionário (objeto completo)
     @OneToOne(cascade = CascadeType.ALL)
     private QuestionarioSintomas questionario;
 
