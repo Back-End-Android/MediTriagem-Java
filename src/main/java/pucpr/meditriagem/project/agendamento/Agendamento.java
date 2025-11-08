@@ -2,6 +2,7 @@ package pucpr.meditriagem.project.agendamento;
 
 import jakarta.persistence.*;
 import lombok.Setter;
+import pucpr.meditriagem.project.consulta.Consulta;
 
 import java.time.LocalDateTime;
 
@@ -45,4 +46,10 @@ public class Agendamento {
     public LocalDateTime getFim() { return fim; }
 
     public String getObservacao() { return observacao; }
+
+
+    // RELACIONAMENTO BIDIRECIONAL COM CONSULTA
+    @OneToOne(mappedBy = "agendamento", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Consulta consulta;
+
 }
