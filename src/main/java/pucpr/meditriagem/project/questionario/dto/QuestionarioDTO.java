@@ -5,6 +5,13 @@ import pucpr.meditriagem.project.questionario.LocalCorpo;
 public record QuestionarioDTO(
     // Questionário de sintomas
     boolean febre,
+    boolean tontura,
+    boolean fraqueza,
+    boolean faltaDeAr,
+    boolean diarreia,
+    boolean nausea,
+    boolean vomito,
+    boolean dor,
     boolean tosse,
     boolean sangramento,
     boolean alteracaoPressao,

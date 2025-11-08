@@ -16,6 +16,9 @@ public class TriagemDTO {
     private String genero;
     private Integer idade;
 
+    // Log para enfermeiro
+    private Long enfermeiro_id;
+
     // Questionário completo
     private QuestionarioDTO questionario;
 }
