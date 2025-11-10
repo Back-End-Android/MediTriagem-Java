@@ -20,7 +20,6 @@ public class PacienteController {
 
     // Salvar
     @PostMapping
-    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<PacienteResponseDTO> salvar(@RequestBody @Valid PacienteRequestDTO dados) {
         var pacienteSalvo = service.salvar(dados);
         URI localizacao = URI.create("/api/pacientes/" + pacienteSalvo.id());
@@ -43,14 +42,14 @@ public class PacienteController {
 
     // alterar
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<PacienteResponseDTO> alterar(@PathVariable Long id, @RequestBody @Valid PacienteRequestDTO dados) {
         return ResponseEntity.ok(service.alterar(id, dados));
     }
 
     // excluir
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> excluir(@PathVariable Long id) {
         service.excluir(id);
         return ResponseEntity.noContent().build();

@@ -79,10 +79,12 @@ public class Triagem {
     @Column(name = "nivel_urgencia", nullable = false)
     private NivelUrgencia nivelUrgencia; // será calculado depois baseado nos sintomas
 
-    // Desativa a triagem
-    public Boolean setIsActivated(){
-        this.isActivated = Boolean.FALSE;
-        return isActivated;
+    public void setIsActivated(Boolean isActivated) {
+        this.isActivated = isActivated;
     }
 
+    // Desativa a triagem
+    public void desativar() {
+        this.isActivated = Boolean.FALSE;
+    }
 }

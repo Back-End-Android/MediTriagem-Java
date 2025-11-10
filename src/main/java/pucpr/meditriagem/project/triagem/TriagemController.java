@@ -44,9 +44,19 @@ public class TriagemController {
         return ResponseEntity.ok(triagem);
     }
 
+    // Alterar triagem - somente enfermeiro pode alterar
+    @PutMapping("/alterar/{id}")
+    @PreAuthorize("hasAuthority('ENFERMEIRO')")
+    public ResponseEntity<TriagemResponseDTO> alterarTriagem(
+            @PathVariable Long id,
+            @RequestBody @Valid TriagemRequestDTO triagemRequestDTO) {
+        TriagemResponseDTO triagemAtualizada = triagemService.alterarTriagem(id, triagemRequestDTO);
+        return ResponseEntity.ok(triagemAtualizada);
+    }
+
     // Deletar triagem (apenas admin)
     @DeleteMapping("/delete/{id}")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'ENFERMEIRO')")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
         triagemService.deleteById(id);
         return ResponseEntity.noContent().build();

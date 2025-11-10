@@ -1,6 +1,8 @@
 package pucpr.meditriagem.project.paciente;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import pucpr.meditriagem.project.paciente.dto.PacienteRequestDTO;
@@ -94,9 +96,9 @@ public class PacienteService {
             }
         }
 
-        // Atualiza o CPF se mudou
-        if (!paciente.getCpf().equals(dados.cpf())) {
-            paciente.setCpf(dados.cpf());
+        var usuarioLogado = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (!paciente.getUsuario().getEmail().equals(usuarioLogado)) {
+            throw new AccessDeniedException("Você não tem permissão para alterar este paciente");
         }
 
         // Atualiza os dados do paciente
@@ -107,6 +109,11 @@ public class PacienteService {
                 dados.email(),
                 dados.senha() != null && !dados.senha().isEmpty() ? passwordEncoder.encode(dados.senha()) : paciente.getSenha()
         );
+
+        // Atualiza o CPF se mudou
+        if (!paciente.getCpf().equals(dados.cpf())) {
+            paciente.setCpf(dados.cpf());
+        }
 
         // Atualiza o email do usuário se mudou
         if (!paciente.getUsuario().getEmail().equals(dados.email())) {
@@ -122,11 +129,16 @@ public class PacienteService {
         return new PacienteResponseDTO(paciente);
     }
 
-    // excluir
+    // Excluir Paciente
     public void excluir(Long id) {
-        if (!pacienteRepository.existsById(id)) {
-            throw new RuntimeException("Paciente não encontrado");
+        var paciente = pacienteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Paciente não encontrado"));
+
+        var usuarioLogado = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (!paciente.getUsuario().getEmail().equals(usuarioLogado)) {
+            throw new AccessDeniedException("Você não tem permissão para excluir este paciente");
         }
+
         // O @OneToOne com orphanRemoval=true deleta o Usuario junto
         pacienteRepository.deleteById(id);
     }
