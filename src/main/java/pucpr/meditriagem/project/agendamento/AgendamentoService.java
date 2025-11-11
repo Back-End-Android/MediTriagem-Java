@@ -71,7 +71,6 @@ public class AgendamentoService {
     // ---- helpers simples de mapeamento ----
     private AgendamentoDTO toDTO(Agendamento a) {
         return new AgendamentoDTO(
-                a.getId(),
                 a.getMedicoId(),
                 a.getPacienteId(),
                 a.getInicio(),
