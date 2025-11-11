@@ -1,14 +1,17 @@
 package pucpr.meditriagem.project.medico;
 
+import pucpr.meditriagem.project.exceptions.BusinessRuleException;
+import pucpr.meditriagem.project.exceptions.ResourceNotFoundException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import pucpr.meditriagem.project.especialidade.EspecialidadeRepository; // IMPORTE
+import pucpr.meditriagem.project.especialidade.EspecialidadeRepository;
 import pucpr.meditriagem.project.medico.dto.MedicoRequestDTO;
 import pucpr.meditriagem.project.medico.dto.MedicoResponseDTO;
 import pucpr.meditriagem.project.usuario.Cargo;
 import pucpr.meditriagem.project.usuario.Usuario;
-import pucpr.meditriagem.project.usuario.UsuarioRepository; // IMPORTE
+import pucpr.meditriagem.project.usuario.UsuarioRepository;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,28 +26,27 @@ public class MedicoService {
     private UsuarioRepository usuarioRepository;
 
     @Autowired
-    private EspecialidadeRepository especialidadeRepository; // Precisa dele
+    private EspecialidadeRepository especialidadeRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-
     public MedicoResponseDTO salvar(MedicoRequestDTO dados) {
 
-        // Validação (Req. 8)
+
         if (medicoRepository.findByCpf(dados.cpf()).isPresent()) {
-            throw new RuntimeException("CPF já cadastrado"); // TODO: Exceção customizada
+            throw new BusinessRuleException("medico.cpf.duplicado");
         }
         if (medicoRepository.findByCrm(dados.crm()).isPresent()) {
-            throw new RuntimeException("CRM já cadastrado"); // TODO: Exceção customizada
+            throw new BusinessRuleException("medico.crm.duplicado");
         }
         if (usuarioRepository.findByEmail(dados.email()).isPresent()) {
-            throw new RuntimeException("Email já cadastrado"); // TODO: Exceção customizada
+            throw new BusinessRuleException("medico.email.duplicado");
         }
 
         // 1 Buscar a Especialidade
         var especialidade = especialidadeRepository.findById(dados.especialidadeId())
-                .orElseThrow(() -> new RuntimeException("Especialidade não encontrada"));
+                .orElseThrow(() -> new ResourceNotFoundException("especialidade.not_found"));
 
         // 2 cria o Usuario
         var senhaCriptografada = passwordEncoder.encode(dados.senha());
@@ -52,7 +54,7 @@ public class MedicoService {
                 null,
                 dados.email(),
                 senhaCriptografada,
-                Cargo.MEDICO // <-- Define a permissão
+                Cargo.MEDICO
         );
 
         // 3 criar o Medico
@@ -61,13 +63,11 @@ public class MedicoService {
                 dados.cpf(),
                 dados.crm(),
                 dados.dtNascimento(),
-                usuario, // 4. Ligar o Usuario
-                especialidade // 5. Ligar a Especialidade
+                usuario,
+                especialidade
         );
 
-        //  Salvar o Medico (Cascade salva o Usuario junto)
         medicoRepository.save(medico);
-
         return new MedicoResponseDTO(medico);
     }
 
@@ -82,19 +82,25 @@ public class MedicoService {
     // buscar por ID
     public MedicoResponseDTO buscarPorId(Long id) {
         var medico = medicoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Médico não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("medico.not_found"));
         return new MedicoResponseDTO(medico);
     }
 
     // alterar
     public MedicoResponseDTO alterar(Long id, MedicoRequestDTO dados) {
         var medico = medicoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Médico não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("medico.not_found"));
 
         var especialidade = especialidadeRepository.findById(dados.especialidadeId())
-                .orElseThrow(() -> new RuntimeException("Especialidade não encontrada"));
+                .orElseThrow(() -> new ResourceNotFoundException("especialidade.not_found"));
 
-        // Atualiza  dados (sem ser email/senha)
+        if (!medico.getCpf().equals(dados.cpf()) && medicoRepository.findByCpf(dados.cpf()).isPresent()) {
+            throw new BusinessRuleException("medico.cpf.duplicado");
+        }
+        if (!medico.getCrm().equals(dados.crm()) && medicoRepository.findByCrm(dados.crm()).isPresent()) {
+            throw new BusinessRuleException("medico.crm.duplicado");
+        }
+
         medico.atualizarDados(
                 dados.nomeCompleto(),
                 dados.crm(),
@@ -109,9 +115,9 @@ public class MedicoService {
     // excluir
     public void excluir(Long id) {
         if (!medicoRepository.existsById(id)) {
-            throw new RuntimeException("Médico não encontrado");
+            throw new ResourceNotFoundException("medico.not_found");
         }
-        // O @OneToOne com orphanRemoval=true deleta o Usuario junto
+
         medicoRepository.deleteById(id);
     }
 }

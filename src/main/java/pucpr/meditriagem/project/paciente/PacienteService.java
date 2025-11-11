@@ -1,7 +1,13 @@
 package pucpr.meditriagem.project.paciente;
 
+// --- MUDANÇA (REQ. 8): Importar as novas exceções ---
+import pucpr.meditriagem.project.exceptions.BusinessRuleException;
+import pucpr.meditriagem.project.exceptions.ForbiddenOperationException;
+import pucpr.meditriagem.project.exceptions.ResourceNotFoundException;
+// --- FIM DA MUDANÇA ---
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.AccessDeniedException;
+// import org.springframework.security.access.AccessDeniedException; // <-- Não precisamos mais deste
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -28,12 +34,11 @@ public class PacienteService {
 
     public PacienteResponseDTO salvar(PacienteRequestDTO dados) {
 
-        // Validação
         if (pacienteRepository.findByCpf(dados.cpf()).isPresent()) {
-            throw new RuntimeException("CPF já cadastrado"); // TODO: Exceção customizada
+            throw new BusinessRuleException("paciente.cpf.duplicado");
         }
         if (usuarioRepository.findByEmail(dados.email()).isPresent()) {
-            throw new RuntimeException("Email já cadastrado"); // TODO: Exceção customizada
+            throw new BusinessRuleException("paciente.email.duplicado");
         }
 
         // Cria o Usuario
@@ -42,23 +47,20 @@ public class PacienteService {
                 null,
                 dados.email(),
                 senhaCriptografada,
-                Cargo.PACIENTE // Define a permissão
+                Cargo.PACIENTE
         );
 
-        // Cria o Paciente
         var paciente = new Paciente(
                 dados.nomeCompleto(),
                 dados.cpf(),
                 dados.genero(),
                 dados.dtNascimento(),
-                usuario, // Liga o Usuario
+                usuario,
                 dados.email(),
                 senhaCriptografada
         );
 
-        // Salva o Paciente (Cascade salva o Usuario junto)
         pacienteRepository.save(paciente);
-
         return new PacienteResponseDTO(paciente);
     }
 
@@ -73,35 +75,36 @@ public class PacienteService {
     // buscar por ID
     public PacienteResponseDTO buscarPorId(Long id) {
         var paciente = pacienteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Paciente não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("paciente.not_found"));
         return new PacienteResponseDTO(paciente);
     }
 
     // alterar
     public PacienteResponseDTO alterar(Long id, PacienteRequestDTO dados) {
         var paciente = pacienteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Paciente não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("paciente.not_found"));
 
-        // Validação de CPF duplicado (se mudou o CPF)
+
+        // Validação de CPF duplicado
         if (!paciente.getCpf().equals(dados.cpf())) {
             if (pacienteRepository.findByCpf(dados.cpf()).isPresent()) {
-                throw new RuntimeException("CPF já cadastrado");
+                throw new BusinessRuleException("paciente.cpf.duplicado");
             }
         }
 
-        // Validação de email duplicado (se mudou o email)
+        // Validação de email duplicado
         if (!paciente.getUsuario().getEmail().equals(dados.email())) {
             if (usuarioRepository.findByEmail(dados.email()).isPresent()) {
-                throw new RuntimeException("Email já cadastrado");
+                throw new BusinessRuleException("paciente.email.duplicado");
             }
         }
 
         var usuarioLogado = SecurityContextHolder.getContext().getAuthentication().getName();
         if (!paciente.getUsuario().getEmail().equals(usuarioLogado)) {
-            throw new AccessDeniedException("Você não tem permissão para alterar este paciente");
+            throw new ForbiddenOperationException("paciente.unauthorized");
         }
 
-        // Atualiza os dados do paciente
+        // Atualiza os dados do paciente (COM A SUA LÓGICA DE DUPLICAÇÃO)
         paciente.atualizarDados(
                 dados.nomeCompleto(),
                 dados.genero(),
@@ -132,15 +135,14 @@ public class PacienteService {
     // Excluir Paciente
     public void excluir(Long id) {
         var paciente = pacienteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Paciente não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("paciente.not_found"));
+
 
         var usuarioLogado = SecurityContextHolder.getContext().getAuthentication().getName();
         if (!paciente.getUsuario().getEmail().equals(usuarioLogado)) {
-            throw new AccessDeniedException("Você não tem permissão para excluir este paciente");
+            throw new ForbiddenOperationException("paciente.unauthorized");
         }
 
-        // O @OneToOne com orphanRemoval=true deleta o Usuario junto
         pacienteRepository.deleteById(id);
     }
 }
-
