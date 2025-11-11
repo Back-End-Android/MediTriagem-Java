@@ -9,6 +9,7 @@ import pucpr.meditriagem.project.consulta.dto.ConsultaRequestDTO;
 import pucpr.meditriagem.project.consulta.dto.ConsultaResponseDTO;
 import pucpr.meditriagem.project.exceptions.BusinessRuleException;
 import pucpr.meditriagem.project.exceptions.ResourceNotFoundException;
+import pucpr.meditriagem.project.medico.MedicoRepository; // <-- MUDANÇA 1: Importar
 import pucpr.meditriagem.project.triagem.TriagemRepository;
 import pucpr.meditriagem.project.triagem.dto.TriagemResponseDTO;
 
@@ -22,7 +23,8 @@ public class ConsultaService {
     @Autowired private ConsultaRepository consultaRepository;
     @Autowired private AgendamentoRepository agendamentoRepository;
     @Autowired private TriagemRepository triagemRepository;
-    @Autowired private AgendamentoService agendamentoService; // Assume-se que este serviço tem o método buscarPorId(Long id)
+    @Autowired private AgendamentoService agendamentoService;
+    @Autowired private MedicoRepository medicoRepository; // <-- MUDANÇA 2: Injetar
 
     // --- CREATE ---
     @Transactional
@@ -35,20 +37,31 @@ public class ConsultaService {
         var triagem = triagemRepository.findById(dto.triagemId())
                 .orElseThrow(() -> new ResourceNotFoundException("triagem.not_found"));
 
-        // 2. Validação de Unicidade: Garante que um agendamento só tenha uma consulta
+        // --- MUDANÇA 3: Buscar o Médico ---
+        var medico = medicoRepository.findById(dto.medicoId())
+                .orElseThrow(() -> new ResourceNotFoundException("medico.not_found"));
+        // --- FIM DA MUDANÇA ---
+
+        // 2. Validação de Unicidade
         if (consultaRepository.existsByAgendamento(agendamento)) {
             throw new BusinessRuleException("consulta.agendamento.duplicado");
         }
 
+        // --- MUDANÇA 4: Usar o construtor correto e settar tudo ---
         // 3. Mapeamento do DTO para a Entidade
-        Consulta consulta = new Consulta();
-        consulta.setAgendamento(agendamento);
-        consulta.setTriagem(triagem);
-        consulta.setDataHoraInicio(dto.dataHoraInicio());
-        consulta.setClassificacaoFinal(dto.classificacaoFinal());
+        Consulta consulta = new Consulta(
+                agendamento,
+                triagem,
+                medico, // <-- Passa o médico
+                dto.dataHoraInicio(),
+                dto.classificacaoFinal()
+        );
+
+        // Seta os campos restantes
         consulta.setObservacoesMedicas(dto.observacoesMedicas());
         consulta.setEncaminhamentos(dto.encaminhamentos());
         consulta.setDataHoraFim(dto.dataHoraFim());
+        // --- FIM DA MUDANÇA ---
 
         // 4. Salva e retorna o DTO de resposta
         Consulta consultaSalva = consultaRepository.save(consulta);
@@ -77,12 +90,10 @@ public class ConsultaService {
         Consulta consulta = consultaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("consulta.not_found"));
 
-        // Atualiza campos
-        consulta.setDataHoraInicio(dto.dataHoraInicio());
-        consulta.setDataHoraFim(dto.dataHoraFim());
-        consulta.setObservacoesMedicas(dto.observacoesMedicas());
-        consulta.setEncaminhamentos(dto.encaminhamentos());
-        consulta.setClassificacaoFinal(dto.classificacaoFinal());
+        // (O seu 'atualizar' não permite trocar o médico, agendamento ou triagem, o que está correto)
+
+        // Atualiza campos (usando o método da entidade)
+        consulta.atualizar(dto);
 
         Consulta consultaAtualizada = consultaRepository.save(consulta);
         return toResponseDTO(consultaAtualizada);
@@ -99,7 +110,7 @@ public class ConsultaService {
 
     // --- Mapper Helper (Mapeia a Entidade para o DTO de Resposta) ---
     private ConsultaResponseDTO toResponseDTO(Consulta consulta) {
-        // Busca e mapeia o Agendamento (usando o AgendamentoService)
+        // Busca e mapeia o Agendamento
         var agendamentoDTO = agendamentoService.buscarPorId(consulta.getAgendamento().getId());
 
         // Mapeia a Triagem

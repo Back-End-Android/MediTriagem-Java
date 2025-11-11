@@ -83,7 +83,6 @@ class MedicoServiceTest {
     @Test
     @DisplayName("Deve salvar médico com sucesso")
     void deveSalvarMedicoComSucesso() {
-        // Arrange
         when(especialidadeRepository.findById(1L)).thenReturn(Optional.of(especialidade));
         when(medicoRepository.findByCpf(anyString())).thenReturn(Optional.empty());
         when(medicoRepository.findByCrm(anyString())).thenReturn(Optional.empty());
@@ -91,10 +90,8 @@ class MedicoServiceTest {
         when(passwordEncoder.encode(anyString())).thenReturn("senhaEncriptada");
         when(medicoRepository.save(any(Medico.class))).thenReturn(medico);
 
-        // Act
         MedicoResponseDTO resultado = medicoService.salvar(medicoRequestDTO);
 
-        // Assert
         assertNotNull(resultado);
         assertEquals("Dr. Carlos Souza", resultado.nomeCompleto());
         assertEquals("CRM12345", resultado.crm());
@@ -105,10 +102,8 @@ class MedicoServiceTest {
     @Test
     @DisplayName("Deve lançar exceção ao salvar médico com especialidade inexistente")
     void deveLancarExcecaoAoSalvarMedicoComEspecialidadeInexistente() {
-        // Arrange
         when(especialidadeRepository.findById(1L)).thenReturn(Optional.empty());
 
-        // Act & Assert
         ResourceNotFoundException exception = assertThrows(
                 ResourceNotFoundException.class,
                 () -> medicoService.salvar(medicoRequestDTO)
@@ -121,10 +116,8 @@ class MedicoServiceTest {
     @Test
     @DisplayName("Deve lançar exceção ao salvar médico com CPF duplicado")
     void deveLancarExcecaoAoSalvarMedicoComCpfDuplicado() {
-        // Arrange
         when(medicoRepository.findByCpf("11122233344")).thenReturn(Optional.of(medico));
 
-        // Act & Assert
         BusinessRuleException exception = assertThrows(
                 BusinessRuleException.class,
                 () -> medicoService.salvar(medicoRequestDTO)
@@ -137,11 +130,9 @@ class MedicoServiceTest {
     @Test
     @DisplayName("Deve lançar exceção ao salvar médico com CRM duplicado")
     void deveLancarExcecaoAoSalvarMedicoComCrmDuplicado() {
-        // Arrange
         when(medicoRepository.findByCpf(anyString())).thenReturn(Optional.empty());
         when(medicoRepository.findByCrm("CRM12345")).thenReturn(Optional.of(medico));
 
-        // Act & Assert
         BusinessRuleException exception = assertThrows(
                 BusinessRuleException.class,
                 () -> medicoService.salvar(medicoRequestDTO)
@@ -154,7 +145,6 @@ class MedicoServiceTest {
     @Test
     @DisplayName("Deve listar todos os médicos")
     void deveListarTodosMedicos() {
-        // Arrange
         Medico medico2 = new Medico(
                 "Dra. Ana Lima",
                 "55566677788",
@@ -168,10 +158,8 @@ class MedicoServiceTest {
         List<Medico> medicos = Arrays.asList(medico, medico2);
         when(medicoRepository.findAll()).thenReturn(medicos);
 
-        // Act
         List<MedicoResponseDTO> resultado = medicoService.listarTodos();
 
-        // Assert
         assertNotNull(resultado);
         assertEquals(2, resultado.size());
         assertEquals("Dr. Carlos Souza", resultado.get(0).nomeCompleto());
@@ -182,13 +170,10 @@ class MedicoServiceTest {
     @Test
     @DisplayName("Deve buscar médico por ID com sucesso")
     void deveBuscarMedicoPorIdComSucesso() {
-        // Arrange
         when(medicoRepository.findById(1L)).thenReturn(Optional.of(medico));
 
-        // Act
         MedicoResponseDTO resultado = medicoService.buscarPorId(1L);
 
-        // Assert
         assertNotNull(resultado);
         assertEquals(1L, resultado.id());
         assertEquals("Dr. Carlos Souza", resultado.nomeCompleto());
@@ -199,10 +184,8 @@ class MedicoServiceTest {
     @Test
     @DisplayName("Deve lançar exceção ao buscar médico inexistente")
     void deveLancarExcecaoAoBuscarMedicoInexistente() {
-        // Arrange
         when(medicoRepository.findById(999L)).thenReturn(Optional.empty());
 
-        // Act & Assert
         ResourceNotFoundException exception = assertThrows(
                 ResourceNotFoundException.class,
                 () -> medicoService.buscarPorId(999L)
@@ -214,7 +197,6 @@ class MedicoServiceTest {
     @Test
     @DisplayName("Deve alterar médico com sucesso")
     void deveAlterarMedicoComSucesso() {
-        // Arrange
         MedicoRequestDTO dadosAtualizados = new MedicoRequestDTO(
                 "Dr. Carlos Souza Atualizado",
                 "11122233344",  // Mesmo CPF, não verifica duplicidade
@@ -230,10 +212,8 @@ class MedicoServiceTest {
         when(medicoRepository.findByCrm("CRM99999")).thenReturn(Optional.empty());  // Apenas CRM mudou
         when(medicoRepository.save(any(Medico.class))).thenReturn(medico);
 
-        // Act
         MedicoResponseDTO resultado = medicoService.alterar(1L, dadosAtualizados);
 
-        // Assert
         assertNotNull(resultado);
         verify(medicoRepository, times(1)).save(any(Medico.class));
     }
@@ -241,14 +221,12 @@ class MedicoServiceTest {
     @Test
     @DisplayName("Deve excluir médico com sucesso")
     void deveExcluirMedicoComSucesso() {
-        // Arrange
         when(medicoRepository.existsById(1L)).thenReturn(true);
         doNothing().when(medicoRepository).deleteById(1L);
 
-        // Act
+
         medicoService.excluir(1L);
 
-        // Assert
         verify(medicoRepository, times(1)).existsById(1L);
         verify(medicoRepository, times(1)).deleteById(1L);
     }
@@ -256,10 +234,8 @@ class MedicoServiceTest {
     @Test
     @DisplayName("Deve lançar exceção ao tentar excluir médico inexistente")
     void deveLancarExcecaoAoExcluirMedicoInexistente() {
-        // Arrange
         when(medicoRepository.existsById(999L)).thenReturn(false);
 
-        // Act & Assert
         ResourceNotFoundException exception = assertThrows(
                 ResourceNotFoundException.class,
                 () -> medicoService.excluir(999L)

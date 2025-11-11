@@ -46,8 +46,16 @@ public class EnfermeiroService {
                 usuario
         );
 
-        enfermeiroRepository.save(enfermeiro); // cascade salva Usuario
-        return new EnfermeiroResponseDTO(enfermeiro);
+        // --- AQUI ESTÁ A CORREÇÃO ---
+
+        // 1. Capture o objeto que o 'save' retorna.
+        //    (É este que tem o ID do banco/mock)
+        Enfermeiro enfermeiroSalvo = enfermeiroRepository.save(enfermeiro);
+
+        // 2. Use o objeto 'enfermeiroSalvo' (com ID) para criar o DTO.
+        return new EnfermeiroResponseDTO(enfermeiroSalvo);
+
+        // --- FIM DA CORREÇÃO ---
     }
 
     // READ (lista)
