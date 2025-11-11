@@ -20,6 +20,7 @@ public class ConsultaController {
     // CREATE: POST /api/consultas
     @PostMapping
     public ResponseEntity<ConsultaResponseDTO> criarConsulta(@RequestBody @Valid ConsultaRequestDTO dto) {
+        // Chama o método 'criar' do serviço e mapeia o retorno para 201 Created
         var response = consultaService.criar(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

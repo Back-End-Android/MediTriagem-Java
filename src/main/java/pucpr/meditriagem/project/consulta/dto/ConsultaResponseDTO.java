@@ -15,6 +15,9 @@ public record ConsultaResponseDTO(
         AgendamentoDTO agendamento,
         TriagemResponseDTO triagem,
 
+        // NOVO: ID do Médico (retorna o profissional que realizou a consulta)
+        Long medicoId,
+
         // Dados do atendimento
         LocalDateTime dataHoraInicio,
         LocalDateTime dataHoraFim,
@@ -22,12 +25,14 @@ public record ConsultaResponseDTO(
         String encaminhamentos,
         ClassificacaoFinal classificacaoFinal
 ) {
-    // Construtor para mapeamento
+    // Construtor para mapeamento da Entidade Consulta para o DTO
     public ConsultaResponseDTO(Consulta consulta, AgendamentoDTO agendamentoDTO, TriagemResponseDTO triagemDTO) {
         this(
                 consulta.getId(),
                 agendamentoDTO,
                 triagemDTO,
+                // Mapeamento do ID do Médico
+                consulta.getMedico() != null ? consulta.getMedico().getId() : null,
                 consulta.getDataHoraInicio(),
                 consulta.getDataHoraFim(),
                 consulta.getObservacoesMedicas(),
