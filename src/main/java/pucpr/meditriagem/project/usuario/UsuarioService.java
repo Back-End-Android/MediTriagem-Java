@@ -3,6 +3,8 @@ package pucpr.meditriagem.project.usuario;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import pucpr.meditriagem.project.exceptions.BusinessRuleException;
+import pucpr.meditriagem.project.exceptions.ResourceNotFoundException;
 import pucpr.meditriagem.project.usuario.dto.UserRequestDTO;
 import pucpr.meditriagem.project.usuario.dto.UserResponseDTO;
 
@@ -21,7 +23,7 @@ public class UsuarioService {
     // Método para o Admin criar um novo usuário (ex: outro Admin)
     public UserResponseDTO salvar(UserRequestDTO dados) {
         if (usuarioRepository.findByEmail(dados.getEmail()).isPresent()) {
-            throw new RuntimeException("Email já cadastrado");
+            throw new BusinessRuleException("usuario.email.duplicado");
         }
 
         var senhaCriptografada = passwordEncoder.encode(dados.getSenha());
@@ -40,7 +42,7 @@ public class UsuarioService {
     // Método para o Admin atualizar um usuário
     public UserResponseDTO atualizar(Long id, UserRequestDTO dados) {
         var usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("usuario.not_found"));
 
 
         if (dados.getEmail() != null) {
@@ -69,14 +71,14 @@ public class UsuarioService {
     // Método para o Admin buscar um usuário
     public UserResponseDTO buscarPorId(Long id) {
         var usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("usuario.not_found"));
         return new UserResponseDTO(usuario);
     }
 
     // Método para o Admin deletar um usuário
     public void excluir(Long id) {
         if (!usuarioRepository.existsById(id)) {
-            throw new RuntimeException("Usuário não encontrado");
+            throw new ResourceNotFoundException("usuario.not_found");
         }
         usuarioRepository.deleteById(id);
     }

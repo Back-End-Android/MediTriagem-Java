@@ -7,11 +7,11 @@ import pucpr.meditriagem.project.agendamento.AgendamentoRepository;
 import pucpr.meditriagem.project.agendamento.AgendamentoService;
 import pucpr.meditriagem.project.consulta.dto.ConsultaRequestDTO;
 import pucpr.meditriagem.project.consulta.dto.ConsultaResponseDTO;
-import pucpr.meditriagem.project.medico.MedicoRepository; // NOVA INJEÇÃO
+import pucpr.meditriagem.project.exceptions.BusinessRuleException;
+import pucpr.meditriagem.project.exceptions.ResourceNotFoundException;
 import pucpr.meditriagem.project.triagem.TriagemRepository;
 import pucpr.meditriagem.project.triagem.dto.TriagemResponseDTO;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,10 +22,7 @@ public class ConsultaService {
     @Autowired private ConsultaRepository consultaRepository;
     @Autowired private AgendamentoRepository agendamentoRepository;
     @Autowired private TriagemRepository triagemRepository;
-    @Autowired private AgendamentoService agendamentoService;
-    @Autowired private MedicoRepository medicoRepository; // INJEÇÃO ADICIONADA
-    // O MedicoRepository é essencial para buscar o objeto Médico, que é obrigatório na Consulta.
-
+    @Autowired private AgendamentoService agendamentoService; // Assume-se que este serviço tem o método buscarPorId(Long id)
 
     // --- CREATE ---
     @Transactional
@@ -33,31 +30,22 @@ public class ConsultaService {
 
         // 1. Busca e validação das entidades relacionadas
         var agendamento = agendamentoRepository.findById(dto.agendamentoId())
-                .orElseThrow(() -> new RuntimeException("Agendamento não encontrado."));
+                .orElseThrow(() -> new ResourceNotFoundException("agendamento.not_found"));
 
         var triagem = triagemRepository.findById(dto.triagemId())
-                .orElseThrow(() -> new RuntimeException("Triagem não encontrada."));
-
-        // NOVO: Busca e validação do Médico (o medicoId é obrigatório pelo DTO)
-        var medico = medicoRepository.findById(dto.medicoId())
-                .orElseThrow(() -> new RuntimeException("Médico não encontrado."));
-
+                .orElseThrow(() -> new ResourceNotFoundException("triagem.not_found"));
 
         // 2. Validação de Unicidade: Garante que um agendamento só tenha uma consulta
         if (consultaRepository.existsByAgendamento(agendamento)) {
-            throw new RuntimeException("Já existe uma consulta registrada para este agendamento.");
+            throw new BusinessRuleException("consulta.agendamento.duplicado");
         }
 
-        // 3. Mapeamento do DTO para a Entidade usando o construtor completo
-        Consulta consulta = new Consulta(
-                agendamento,
-                triagem,
-                medico, // MÉDICO ADICIONADO AQUI
-                dto.dataHoraInicio() != null ? dto.dataHoraInicio() : LocalDateTime.now(), // Usa hora atual se não fornecida
-                dto.classificacaoFinal()
-        );
-
-        // Preenche campos opcionais/atualizáveis
+        // 3. Mapeamento do DTO para a Entidade
+        Consulta consulta = new Consulta();
+        consulta.setAgendamento(agendamento);
+        consulta.setTriagem(triagem);
+        consulta.setDataHoraInicio(dto.dataHoraInicio());
+        consulta.setClassificacaoFinal(dto.classificacaoFinal());
         consulta.setObservacoesMedicas(dto.observacoesMedicas());
         consulta.setEncaminhamentos(dto.encaminhamentos());
         consulta.setDataHoraFim(dto.dataHoraFim());
@@ -71,7 +59,7 @@ public class ConsultaService {
     @Transactional(readOnly = true)
     public ConsultaResponseDTO buscarPorId(Long id) {
         var consulta = consultaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Consulta não encontrada."));
+                .orElseThrow(() -> new ResourceNotFoundException("consulta.not_found"));
         return toResponseDTO(consulta);
     }
 
@@ -87,10 +75,14 @@ public class ConsultaService {
     @Transactional
     public ConsultaResponseDTO atualizar(Long id, ConsultaRequestDTO dto) {
         Consulta consulta = consultaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Consulta não encontrada."));
+                .orElseThrow(() -> new ResourceNotFoundException("consulta.not_found"));
 
-        // CORRIGIDO: Usa o método de atualização da entidade (Consulta.java)
-        consulta.atualizar(dto);
+        // Atualiza campos
+        consulta.setDataHoraInicio(dto.dataHoraInicio());
+        consulta.setDataHoraFim(dto.dataHoraFim());
+        consulta.setObservacoesMedicas(dto.observacoesMedicas());
+        consulta.setEncaminhamentos(dto.encaminhamentos());
+        consulta.setClassificacaoFinal(dto.classificacaoFinal());
 
         Consulta consultaAtualizada = consultaRepository.save(consulta);
         return toResponseDTO(consultaAtualizada);
@@ -100,7 +92,7 @@ public class ConsultaService {
     @Transactional
     public void excluir(Long id) {
         if (!consultaRepository.existsById(id)) {
-            throw new RuntimeException("Consulta não encontrada.");
+            throw new ResourceNotFoundException("consulta.not_found");
         }
         consultaRepository.deleteById(id);
     }

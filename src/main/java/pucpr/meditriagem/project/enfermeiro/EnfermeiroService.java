@@ -5,6 +5,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import pucpr.meditriagem.project.enfermeiro.dto.EnfermeiroRequestDTO;
 import pucpr.meditriagem.project.enfermeiro.dto.EnfermeiroResponseDTO;
+import pucpr.meditriagem.project.exceptions.BusinessRuleException;
+import pucpr.meditriagem.project.exceptions.ResourceNotFoundException;
 import pucpr.meditriagem.project.usuario.Cargo;
 import pucpr.meditriagem.project.usuario.Usuario;
 import pucpr.meditriagem.project.usuario.UsuarioRepository;
@@ -22,11 +24,11 @@ public class EnfermeiroService {
     // CREATE
     public EnfermeiroResponseDTO cadastrar(EnfermeiroRequestDTO dados) {
         if (enfermeiroRepository.existsByCpf(dados.cpf()))
-            throw new RuntimeException("CPF já cadastrado");
+            throw new BusinessRuleException("enfermeiro.cpf.duplicado");
         if (enfermeiroRepository.existsByCoren(dados.coren()))
-            throw new RuntimeException("COREN já cadastrado");
+            throw new BusinessRuleException("enfermeiro.coren.duplicado");
         if (usuarioRepository.findByEmail(dados.email()).isPresent())
-            throw new RuntimeException("Email já cadastrado");
+            throw new BusinessRuleException("enfermeiro.email.duplicado");
 
         var senhaHash = passwordEncoder.encode(dados.senha());
         var usuario = new Usuario(
@@ -57,19 +59,19 @@ public class EnfermeiroService {
     // READ (por id)
     public EnfermeiroResponseDTO buscarPorId(Long id) {
         var e = enfermeiroRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Enfermeiro não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("enfermeiro.not_found"));
         return new EnfermeiroResponseDTO(e);
     }
 
     // UPDATE
     public EnfermeiroResponseDTO alterar(Long id, EnfermeiroRequestDTO dados) {
         var e = enfermeiroRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Enfermeiro não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("enfermeiro.not_found"));
 
         // se trocou COREN, valida duplicidade
         if (dados.coren() != null && !dados.coren().equals(e.getCoren())
                 && enfermeiroRepository.existsByCoren(dados.coren())) {
-            throw new RuntimeException("COREN já cadastrado");
+            throw new BusinessRuleException("enfermeiro.coren.duplicado");
         }
 
         e.atualizar(dados.nomeCompleto(), dados.coren(), dados.dtNascimento());
@@ -77,7 +79,7 @@ public class EnfermeiroService {
         // opcional: trocar email/senha do usuário
         if (dados.email() != null && !dados.email().equals(e.getUsuario().getUsername())) {
             if (usuarioRepository.findByEmail(dados.email()).isPresent())
-                throw new RuntimeException("Email já cadastrado");
+                throw new BusinessRuleException("enfermeiro.email.duplicado");
             e.getUsuario().setEmail(dados.email());
         }
         if (dados.senha() != null && !dados.senha().isBlank()) {
@@ -91,7 +93,7 @@ public class EnfermeiroService {
     // DELETE
     public void excluir(Long id) {
         var e = enfermeiroRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Enfermeiro não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("enfermeiro.not_found"));
         enfermeiroRepository.delete(e);
     }
 }

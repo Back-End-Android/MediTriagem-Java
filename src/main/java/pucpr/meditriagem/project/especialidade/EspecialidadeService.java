@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pucpr.meditriagem.project.especialidade.dto.EspecialidadeRequestDTO;
 import pucpr.meditriagem.project.especialidade.dto.EspecialidadeResponseDTO;
+import pucpr.meditriagem.project.exceptions.ResourceNotFoundException;
+import pucpr.meditriagem.project.exceptions.BusinessRuleException;
 
 import java.util.List;
 import java.util.Objects;
@@ -22,9 +24,15 @@ public class EspecialidadeService {
                 .collect(Collectors.toList());
     }
 
+    public EspecialidadeResponseDTO buscarPorId(Long id) {
+        var especialidade = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("especialidade.not_found"));
+        return new EspecialidadeResponseDTO(especialidade);
+    }
+
     public EspecialidadeResponseDTO salvar(EspecialidadeRequestDTO dados) {
         if (repository.findByNome(dados.nome()).isPresent()) {
-            throw new RuntimeException("Especialidade com este nome já existe");
+            throw new BusinessRuleException("especialidade.nome.duplicado");
         }
         var especialidade = new Especialidade(dados.nome());
         repository.save(especialidade);
@@ -33,11 +41,11 @@ public class EspecialidadeService {
 
     public EspecialidadeResponseDTO atualizar(Long id, EspecialidadeRequestDTO dados) {
         var especialidade = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("ID da especialidade não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("especialidade.not_found"));
 
         var especialidadeExistente = repository.findByNome(dados.nome());
         if (especialidadeExistente.isPresent() && !Objects.equals(especialidadeExistente.get().getId(), id)) {
-            throw new RuntimeException("Já existe outra especialidade com este nome");
+            throw new BusinessRuleException("especialidade.nome.duplicado");
         }
 
         especialidade.setNome(dados.nome());
@@ -48,10 +56,8 @@ public class EspecialidadeService {
 
     public void excluir(Long id) {
         if (!repository.existsById(id)) {
-            throw new RuntimeException("ID da especialidade não encontrado");
+            throw new ResourceNotFoundException("especialidade.not_found");
         }
-
-        // tem q fazer verificar se tem medico com essa especialidade antes de excluir
 
         repository.deleteById(id);
     }

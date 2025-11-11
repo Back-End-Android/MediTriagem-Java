@@ -4,6 +4,8 @@ package pucpr.meditriagem.project.questionario;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import pucpr.meditriagem.project.exceptions.ForbiddenOperationException;
+import pucpr.meditriagem.project.exceptions.ResourceNotFoundException;
 import pucpr.meditriagem.project.paciente.Paciente;
 import pucpr.meditriagem.project.paciente.PacienteRepository;
 import pucpr.meditriagem.project.questionario.dto.QuestionarioDTO;
@@ -37,7 +39,7 @@ public class QuestionarioService {
     public QuestionarioResponseDTO criarQuestionario(Long pacienteId, QuestionarioDTO questionarioDTO) {
         // Busca o paciente pelo ID
         Paciente paciente = pacienteRepository.findById(pacienteId)
-                .orElseThrow(() -> new RuntimeException("Paciente não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("paciente.not_found"));
 
         // Verifica se o usuário logado é o próprio paciente
         verificarSePacienteLogado(pacienteId);
@@ -63,7 +65,7 @@ public class QuestionarioService {
     public QuestionarioResponseDTO alterarQuestionario(Long questionarioId, QuestionarioDTO questionarioDTO) {
         // Busca o questionário existente
         QuestionarioSintomas questionario = questionarioRepository.findById(questionarioId)
-                .orElseThrow(() -> new RuntimeException("Questionário não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("questionario.not_found"));
 
         // Verifica se o usuário logado é o paciente dono do questionário
         verificarSePacienteLogado(questionario.getPacienteId());
@@ -96,14 +98,14 @@ public class QuestionarioService {
 
         // Busca o paciente pelo ID
         Paciente paciente = pacienteRepository.findById(pacienteId)
-                .orElseThrow(() -> new RuntimeException("Paciente não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("paciente.not_found"));
 
-       // Buscar paciente pelo usuário logado e comparar IDs
+        // Buscar paciente pelo usuário logado e comparar IDs
         Paciente pacienteDoUsuario = pacienteRepository.findByUsuarioId(usuarioLogado.getId())
-                .orElseThrow(() -> new RuntimeException("Paciente não encontrado para este usuário"));
+                .orElseThrow(() -> new ResourceNotFoundException("paciente.not_found"));
 
         if (!pacienteId.equals(pacienteDoUsuario.getId())) {
-            throw new RuntimeException("Acesso negado: você só pode modificar seus próprios questionários");
+            throw new ForbiddenOperationException("questionario.unauthorized.paciente");
         }
     }
 
@@ -121,15 +123,15 @@ public class QuestionarioService {
         if (usuarioLogado.getCargo() == pucpr.meditriagem.project.usuario.Cargo.PACIENTE) {
             // Busca o paciente associado ao usuário logado
             Paciente paciente = pacienteRepository.findByUsuarioId(usuarioLogado.getId())
-                    .orElseThrow(() -> new RuntimeException("Paciente não encontrado"));
+                    .orElseThrow(() -> new ResourceNotFoundException("paciente.not_found"));
 
             if (!questionario.getPacienteId().equals(paciente.getId())) {
-                throw new RuntimeException("Acesso negado: você só pode visualizar seus próprios questionários");
+                throw new ForbiddenOperationException("questionario.unauthorized.view");
             }
             return;
         }
 
-        throw new RuntimeException("Acesso negado");
+        throw new ForbiddenOperationException("questionario.unauthorized");
     }
 
     // MÉTODO AUXILIAR CORRIGIDO: Verifica permissão de acesso para questionários de um paciente
@@ -146,27 +148,27 @@ public class QuestionarioService {
         if (usuarioLogado.getCargo() == pucpr.meditriagem.project.usuario.Cargo.PACIENTE) {
             // Busca o paciente associado ao usuário logado
             Paciente paciente = pacienteRepository.findByUsuarioId(usuarioLogado.getId())
-                    .orElseThrow(() -> new RuntimeException("Paciente não encontrado"));
+                    .orElseThrow(() -> new ResourceNotFoundException("paciente.not_found"));
 
             if (!pacienteId.equals(paciente.getId())) {
-                throw new RuntimeException("Acesso negado: você só pode visualizar seus próprios questionários");
+                throw new ForbiddenOperationException("questionario.unauthorized.view");
             }
             return;
         }
 
-        throw new RuntimeException("Acesso negado");
+        throw new ForbiddenOperationException("questionario.unauthorized");
     }
 
     // Obtém o usuário logado
     private Usuario getUsuarioLogado() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
-            throw new RuntimeException("Usuário não autenticado");
+            throw new ForbiddenOperationException("usuario.not_authenticated");
         }
 
         String email = authentication.getName();
         return usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("usuario.not_found"));
     }
 
     // Calcula a idade a partir da data de nascimento
@@ -219,7 +221,7 @@ public class QuestionarioService {
     // Busca questionário por ID
     public QuestionarioResponseDTO findById(Long id) {
         QuestionarioSintomas questionario = questionarioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Questionário não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("questionario.not_found"));
 
         // Verifica permissão de acesso
         verificarPermissaoAcesso(questionario);
@@ -246,7 +248,7 @@ public class QuestionarioService {
     // Deleta um questionário
     public void deleteById(Long id) {
         if (!questionarioRepository.existsById(id)) {
-            throw new RuntimeException("Questionário não encontrado");
+            throw new ResourceNotFoundException("questionario.not_found");
         }
         questionarioRepository.deleteById(id);
     }

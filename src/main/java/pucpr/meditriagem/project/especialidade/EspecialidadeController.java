@@ -34,6 +34,12 @@ public class EspecialidadeController {
         return ResponseEntity.ok(service.listar());
     }
 
+    @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<EspecialidadeResponseDTO> buscarPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(service.buscarPorId(id));
+    }
+
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<EspecialidadeResponseDTO> atualizar(

@@ -5,6 +5,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import pucpr.meditriagem.project.enfermeiro.Enfermeiro;
 import pucpr.meditriagem.project.enfermeiro.EnfermeiroRepository;
+import pucpr.meditriagem.project.exceptions.BusinessRuleException;
+import pucpr.meditriagem.project.exceptions.ForbiddenOperationException;
+import pucpr.meditriagem.project.exceptions.ResourceNotFoundException;
 import pucpr.meditriagem.project.paciente.Paciente;
 import pucpr.meditriagem.project.paciente.PacienteRepository;
 import pucpr.meditriagem.project.questionario.QuestionarioRepository;
@@ -45,19 +48,19 @@ public class TriagemService {
     public TriagemResponseDTO criarTriagem(TriagemRequestDTO dados) {
         // Valida se o enfermeiro existe diretamente na tabela enfermeiro
         Enfermeiro enfermeiro = enfermeiroRepository.findById(dados.getEnfermeiroId())
-                .orElseThrow(() -> new RuntimeException("Enfermeiro não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("enfermeiro.not_found"));
 
         // Valida se o paciente existe
         Paciente paciente = pacienteRepository.findById(dados.getPacienteId())
-                .orElseThrow(() -> new RuntimeException("Paciente não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("paciente.not_found"));
 
         // Valida se o questionário existe
         QuestionarioSintomas questionario = questionarioRepository.findById(dados.getQuestionarioId())
-                .orElseThrow(() -> new RuntimeException("Questionário não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("questionario.not_found"));
 
         // Valida se o questionário pertence ao paciente
         if (!questionario.getPacienteId().equals(dados.getPacienteId())) {
-            throw new RuntimeException("Questionário não pertence ao paciente informado");
+            throw new BusinessRuleException("triagem.questionario.mismatch");
         }
 
         // Cria a triagem com os dados fornecidos
@@ -72,7 +75,7 @@ public class TriagemService {
 
         // Se o questionário indica febre, a temperatura deve ser medida
         if (questionario.getFebre() != null && questionario.getFebre() && dados.getTemperatura() == null) {
-            throw new RuntimeException("Temperatura deve ser medida quando o paciente relata febre");
+            throw new BusinessRuleException("triagem.temperatura.required");
         }
         triagem.setTemperatura(dados.getTemperatura());
 
@@ -106,12 +109,12 @@ public class TriagemService {
         // Paciente pode ver apenas suas próprias triagens
         else if (usuarioLogado.getCargo() == Cargo.PACIENTE) {
             Paciente paciente = pacienteRepository.findByUsuarioId(usuarioLogado.getId())
-                    .orElseThrow(() -> new RuntimeException("Paciente não encontrado"));
+                    .orElseThrow(() -> new ResourceNotFoundException("paciente.not_found"));
             triagens = triagemRepository.findByPacienteId(paciente.getId());
         }
         // Outros usuários não podem ver
         else {
-            throw new RuntimeException("Acesso negado");
+            throw new ForbiddenOperationException("triagem.unauthorized");
         }
 
         return triagens.stream()
@@ -122,7 +125,7 @@ public class TriagemService {
     // Busca triagem por ID (com controle de acesso)
     public TriagemResponseDTO findById(Long id) {
         Triagem triagem = triagemRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Triagem não encontrada"));
+                .orElseThrow(() -> new ResourceNotFoundException("triagem.not_found"));
 
         // Verifica permissão de acesso
         verificarPermissaoAcesso(triagem);
@@ -147,48 +150,48 @@ public class TriagemService {
         // Paciente pode acessar apenas suas próprias triagens
         if (usuarioLogado.getCargo() == Cargo.PACIENTE) {
             Paciente paciente = pacienteRepository.findByUsuarioId(usuarioLogado.getId())
-                    .orElseThrow(() -> new RuntimeException("Paciente não encontrado"));
+                    .orElseThrow(() -> new ResourceNotFoundException("paciente.not_found"));
 
             if (!triagem.getPacienteId().equals(paciente.getId())) {
-                throw new RuntimeException("Acesso negado: você só pode visualizar suas próprias triagens");
+                throw new ForbiddenOperationException("triagem.unauthorized.view");
             }
             return;
         }
 
         // Outros usuários não podem acessar
-        throw new RuntimeException("Acesso negado");
+        throw new ForbiddenOperationException("triagem.unauthorized");
     }
 
     // Altera uma triagem existente (apenas enfermeiro)
     public TriagemResponseDTO alterarTriagem(Long id, TriagemRequestDTO dados) {
         // Busca a triagem existente
         Triagem triagem = triagemRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Triagem não encontrada"));
+                .orElseThrow(() -> new ResourceNotFoundException("triagem.not_found"));
 
         // Verifica se a triagem está ativa
         if (!triagem.getIsActivated()) {
-            throw new RuntimeException("Não é possível alterar uma triagem desativada");
+            throw new BusinessRuleException("triagem.inactive");
         }
 
         // Obtém o usuário logado e verifica se é enfermeiro na tabela enfermeiro
         Usuario usuarioLogado = getUsuarioLogado();
         if (!isEnfermeiro(usuarioLogado.getId())) {
-            throw new RuntimeException("Apenas enfermeiros podem alterar triagens");
+            throw new ForbiddenOperationException("triagem.unauthorized.enfermeiro");
         }
 
         // Verifica se o enfermeiro logado é o mesmo que criou a triagem
         if (!triagem.getEnfermeiroId().equals(usuarioLogado.getId())) {
-            throw new RuntimeException("Apenas o enfermeiro que criou a triagem pode alterá-la");
+            throw new ForbiddenOperationException("triagem.unauthorized.creator");
         }
 
         // Valida se o questionário existe (se foi fornecido um novo)
         if (dados.getQuestionarioId() != null) {
             QuestionarioSintomas questionario = questionarioRepository.findById(dados.getQuestionarioId())
-                    .orElseThrow(() -> new RuntimeException("Questionário não encontrado"));
+                    .orElseThrow(() -> new ResourceNotFoundException("questionario.not_found"));
 
             // Valida se o questionário pertence ao paciente
             if (!questionario.getPacienteId().equals(triagem.getPacienteId())) {
-                throw new RuntimeException("Questionário não pertence ao paciente da triagem");
+                throw new BusinessRuleException("triagem.questionario.mismatch");
             }
             triagem.setQuestionario(questionario);
         }
@@ -211,7 +214,7 @@ public class TriagemService {
         if (triagem.getQuestionario().getFebre() != null &&
                 triagem.getQuestionario().getFebre() &&
                 dados.getTemperatura() == null) {
-            throw new RuntimeException("Temperatura deve ser medida quando o paciente relata febre");
+            throw new BusinessRuleException("triagem.temperatura.required");
         }
         if (dados.getTemperatura() != null) {
             triagem.setTemperatura(dados.getTemperatura());
@@ -250,12 +253,12 @@ public class TriagemService {
     private Usuario getUsuarioLogado() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
-            throw new RuntimeException("Usuário não autenticado");
+            throw new ForbiddenOperationException("usuario.not_authenticated");
         }
 
         String email = authentication.getName();
         return usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("usuario.not_found"));
     }
 
     // Salva uma triagem
@@ -266,7 +269,7 @@ public class TriagemService {
     // Deleta uma triagem
     public void deleteById(Long id) {
         if (!triagemRepository.existsById(id)) {
-            throw new RuntimeException("Triagem não encontrada");
+            throw new ResourceNotFoundException("triagem.not_found");
         }
         triagemRepository.deleteById(id);
     }
