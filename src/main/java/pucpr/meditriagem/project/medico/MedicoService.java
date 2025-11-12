@@ -33,7 +33,6 @@ public class MedicoService {
 
     public MedicoResponseDTO salvar(MedicoRequestDTO dados) {
 
-
         if (medicoRepository.findByCpf(dados.cpf()).isPresent()) {
             throw new BusinessRuleException("medico.cpf.duplicado");
         }

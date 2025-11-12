@@ -78,16 +78,13 @@ public class RestExceptionHandler {
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 
-    // 3. Erro 403 genérico (Acesso Negado) - USA O CÓDIGO "error.forbidden"
-    // Isso é capturado se o @PreAuthorize falhar
+
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Object> handleAccessDenied(AccessDeniedException ex) {
         ex.printStackTrace(); // Bom para logar
         return buildErrorResponse(HttpStatus.FORBIDDEN, "error.forbidden");
     }
 
-    // 4. Erro 500 (Genérico) - USA O CÓDIGO "error.generic"
-    // "Pega-tudo" para qualquer erro inesperado
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleGenericException(Exception ex) {
         ex.printStackTrace(); // Loga o erro real no console (importante!)

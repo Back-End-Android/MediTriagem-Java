@@ -43,8 +43,6 @@ class PacienteControllerTest {
 
     @MockBean
     private PacienteService pacienteService;
-
-
     private PacienteRequestDTO pacienteRequestDTO;
     private PacienteResponseDTO pacienteResponseDTO;
 
@@ -64,10 +62,7 @@ class PacienteControllerTest {
     @DisplayName("POST /api/pacientes - Deve criar paciente (endpoint público) e retornar 201")
 
     void salvar_DeveRetornar201_QuandoEndpointPublico() throws Exception {
-
         when(pacienteService.salvar(any(PacienteRequestDTO.class))).thenReturn(pacienteResponseDTO);
-
-
         mockMvc.perform(post("/api/pacientes")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -77,7 +72,7 @@ class PacienteControllerTest {
 
 
     @Test
-    @DisplayName("POST /api/pacientes - Deve retornar 400 (Req. 8) quando CPF duplicado")
+    @DisplayName("POST /api/pacientes - Deve retornar 400 quando CPF duplicado")
 
     void salvar_DeveRetornar400_QuandoCpfDuplicado() throws Exception {
 
@@ -108,7 +103,7 @@ class PacienteControllerTest {
     }
 
     @Test
-    @DisplayName("DELETE /api/pacientes/{id} - Deve retornar 403 (Req. 8) quando usuário não for o dono")
+    @DisplayName("DELETE /api/pacientes/{id} - Deve retornar 403 quando usuário não for o dono")
     @WithMockUser
     void excluir_DeveRetornar403_QuandoUsuarioNaoForDono() throws Exception {
 

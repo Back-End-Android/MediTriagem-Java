@@ -118,7 +118,7 @@ class PacienteServiceTest {
     }
 
     @Test
-    @DisplayName("Deve excluir paciente (Req. 8) quando o usuário é o dono")
+    @DisplayName("Deve excluir paciente quando o usuário é o dono")
     void deveExcluirPacienteQuandoUsuarioForODono() {
 
         when(SecurityContextHolder.getContext()).thenReturn(securityContextMock);
@@ -134,7 +134,7 @@ class PacienteServiceTest {
     }
 
     @Test
-    @DisplayName("Deve lançar exceção (Req. 8) ao excluir quando o usuário NÃO é o dono")
+    @DisplayName("Deve lançar exceção ao excluir quando o usuário NÃO é o dono")
     void deveLancarExcecaoAoExcluirQuandoUsuarioNaoForODono() {
         when(SecurityContextHolder.getContext()).thenReturn(securityContextMock);
         when(securityContextMock.getAuthentication()).thenReturn(authenticationMock);
